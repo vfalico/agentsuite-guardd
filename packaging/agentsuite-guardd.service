@@ -1,0 +1,25 @@
+[Unit]
+Description=AgentSuite Guardd enforcement provider
+Requires=agentsuite-guardd-gadget.service
+After=local-fs.target agentsuite-guardd-gadget.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/agentsuite-guardd --config /etc/agentsuite-guardd/config.json serve
+User=root
+Group=root
+RuntimeDirectory=agentsuite-guardd
+RuntimeDirectoryMode=0750
+StateDirectory=agentsuite-guardd
+StateDirectoryMode=0700
+ConfigurationDirectory=agentsuite-guardd
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/agentsuite-guardd /var/lib/agentsuite-guardd /sys/fs/bpf/agentsuite-guardd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

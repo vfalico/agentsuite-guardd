@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "guardd_build"
+backend-path = ["_backend"]
+
+[project]
+name = "agentsuite-guardd"
+version = "0.1.0"
+description = "Generic AgentSuite enforcement provider"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+authors = [{name="Veaceslav Falico", email="vfalico@gmail.com"}]
+dependencies = ["cryptography>=46,<47"]
+
+[project.scripts]
+agentsuite-guardd = "agentsuite_guardd.cli:main"
+
+[tool.setuptools.packages.find]
+where=["src"]

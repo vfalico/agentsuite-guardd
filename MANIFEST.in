@@ -1,0 +1,7 @@
+include LICENSE NOTICE README.md THIRD_PARTY_NOTICES.md
+recursive-include _backend *.py
+recursive-include docs *.md
+recursive-include config *.json
+recursive-include packaging *.service *.sh
+recursive-include gadget *.c *.yaml
+recursive-include adapter *.go go.mod

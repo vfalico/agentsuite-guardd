@@ -1,0 +1,17 @@
+name: filesystem-deny-write-hooks
+description: Fail-closed filesystem mutation hooks for a provider-managed exact cgroup target
+datasources:
+  filesystem_denials:
+    fields:
+      - name: cgroup_id
+        type: uint64
+      - name: generation
+        type: uint64
+      - name: device
+        type: uint64
+      - name: inode
+        type: uint64
+      - name: operation
+        type: uint32
+      - name: error
+        type: int32

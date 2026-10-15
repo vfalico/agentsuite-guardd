@@ -1,0 +1,7 @@
+# Architecture
+
+The service separates configuration/credential loading, strict policy compilation, SQLite idempotency state, backend activation, independent readback, Ed25519 signing, and Unix transport. Startup reconciliation checks every durable activation against backend state before requests are accepted.
+
+`PersistentBackend` retains desired attachment identity atomically and delegates live state to `LinuxBPFAdapter`. The packaged adapter exposes the capability only while both required kernel maps and every one of the fifteen pinned LSM links are independently queryable. `MemoryBackend` is only a deterministic conformance backend.
+
+The external Gadget owns kernel mechanics and contains hooks for create, link, metadata, mount bypass, rename, symlink, truncate, unlink, write, and writable-open. `LinuxBPFAdapter` resolves canonical policy roots and their existing descendants to inode identities, populates generation-scoped path-policy entries, then enables only the exact cgroup target. Readback queries both live kernel maps, verifies every value, and restats each protected path. Startup inventory reconciliation detects missing state and removes live orphans; cleanup removes the target map entry before policy entries. This is path-selective rather than target-wide: a targeted process can mutate unlisted paths, and a process outside the exact cgroup can mutate the same protected inode.

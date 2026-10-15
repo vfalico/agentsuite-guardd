@@ -1,0 +1,20 @@
+[Unit]
+Description=Load AgentSuite Guardd path-selective BPF LSM gadget
+After=local-fs.target sys-fs-bpf.mount
+Before=agentsuite-guardd.service
+ConditionPathExists=/sys/kernel/btf/vmlinux
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/agentsuite-guardd-load-gadget
+RemainAfterExit=yes
+User=root
+Group=root
+UMask=0077
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/sys/fs/bpf/agentsuite-guardd /var/lib/agentsuite-guardd
+
+[Install]
+WantedBy=multi-user.target
