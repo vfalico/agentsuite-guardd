@@ -14,7 +14,7 @@ UMask=0077
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/sys/fs/bpf/agentsuite-guardd /var/lib/agentsuite-guardd
+ReadWritePaths=/sys/fs/bpf /var/lib/agentsuite-guardd
 
 [Install]
 WantedBy=multi-user.target
