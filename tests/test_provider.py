@@ -189,6 +189,54 @@ class ProviderTests(unittest.TestCase):
                     "cleanup",
                 )
 
+    def test_expired_active_proof_can_be_cleaned_without_release(self):
+        prepared = self.p.prepare(self.auth)
+        active = self.p.activate(self.auth, prepared["preparationId"])
+        activation = active["proof"]["activationId"]
+        with self.assertRaisesRegex(Conflict, "has not expired"):
+            self.p.cleanup(self.context.attempt_id, activation, "cleanup")
+        self.assertEqual(self.p.status(activation)["state"], "active")
+        self.assertTrue(self.backend.attachments)
+
+        self.now = 1201
+        cleaned = self.p.cleanup(
+            self.context.attempt_id,
+            activation,
+            "cleanup",
+        )
+        self.assertEqual(cleaned["state"], "cleaned")
+        self.assertFalse(self.backend.attachments)
+        self.assertEqual(
+            self.p.cleanup(self.context.attempt_id, activation, "cleanup"),
+            cleaned,
+        )
+        _, value = self.p.store.get(activation)
+        self.assertNotIn("release", value)
+        with self.assertRaises(Conflict):
+            self.p.cleanup(self.context.attempt_id, activation, "changed")
+
+    def test_restart_resumes_expired_active_cleanup(self):
+        store = Store()
+        provider = Provider(store, self.backend, self.signer, lambda: self.now)
+        prepared = provider.prepare(self.auth)
+        active = provider.activate(self.auth, prepared["preparationId"])
+        activation = active["proof"]["activationId"]
+        self.now = 1201
+        self.backend.fail_detach = True
+        with self.assertRaises(BackendError):
+            provider.cleanup(self.context.attempt_id, activation, "cleanup")
+        state, value = store.get(activation)
+        self.assertEqual(state, "cleaning")
+        self.assertNotIn("release", value)
+
+        self.backend.fail_detach = False
+        self.backend.quarantined = False
+        restarted = Provider(store, self.backend, self.signer, lambda: self.now)
+        result = restarted.reconcile_all()
+        self.assertEqual(result[activation]["state"], "cleaned")
+        self.assertFalse(self.backend.attachments)
+        self.assertEqual(restarted.reconcile_all(), {})
+
     def test_restart_reconciliation_fails_closed_when_backend_is_missing(self):
         with tempfile.NamedTemporaryFile() as f:
             backend = MemoryBackend()

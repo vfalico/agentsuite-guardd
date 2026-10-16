@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from datetime import datetime
 import time
 
 from .backend import BackendError
@@ -312,7 +313,21 @@ class Provider:
             if value.get("cleanup") != request:
                 raise Conflict("cleanup identity conflict")
             return {"activationId": activation_id, "state": "cleaned"}
-        if state == "released":
+        if state == "active":
+            expires_at = datetime.fromisoformat(
+                value["proof"]["expiresAt"].replace("Z", "+00:00")
+            ).timestamp()
+            if self.now() < expires_at:
+                raise Conflict("active activation proof has not expired")
+            value = {**value, "cleanup": request}
+            self.store.transition(
+                activation_id,
+                object_digest(value["request"]),
+                "active",
+                "cleaning",
+                value,
+            )
+        elif state == "released":
             value = {**value, "cleanup": request}
             self.store.transition(
                 activation_id,
@@ -325,7 +340,7 @@ class Provider:
             if value.get("cleanup") != request:
                 raise Conflict("cleanup identity conflict")
         else:
-            raise Conflict("activation must be released before cleanup")
+            raise Conflict("activation must be released or have an expired proof")
         self.backend.detach(activation_id)
         self.store.transition(
             activation_id,
