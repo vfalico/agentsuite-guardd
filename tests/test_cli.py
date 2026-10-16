@@ -38,6 +38,28 @@ def test_operational_state_errors_are_reported_without_traceback(
     assert captured.err == f"agentsuite-guardd: configuration error: {error}\n"
 
 
+def test_startup_reconciliation_reports_the_root_failure(capsys) -> None:
+    provider = mock.Mock()
+    provider.reconcile_all.return_value = {
+        "activation:attempt": {
+            "state": "quarantined",
+            "error": "protected path identity changed",
+        }
+    }
+    with (
+        mock.patch.object(cli, "build_provider", return_value=(mock.Mock(), provider)),
+        mock.patch.object(cli, "UnixServer"),
+    ):
+        assert cli.main(["--config", "config.json", "serve"]) == 2
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == (
+        "agentsuite-guardd: configuration error: startup reconciliation failed: "
+        "activation:attempt: protected path identity changed\n"
+    )
+
+
 def test_malformed_config_path_type_is_reported_without_traceback(
     capsys, tmp_path
 ) -> None:

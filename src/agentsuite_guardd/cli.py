@@ -59,8 +59,12 @@ def main(argv=None):
             k: v for k, v in reconciliation.items() if v.get("state") == "quarantined"
         }
         if failed:
+            details = "; ".join(
+                f"{key}: {value.get('error', 'unknown reconciliation failure')}"
+                for key, value in sorted(failed.items())
+            )
             raise ValueError(
-                "startup reconciliation failed: " + ", ".join(sorted(failed))
+                "startup reconciliation failed: " + details
             )
         server = UnixServer(
             config.listen[7:], provider, config.allowed_uids, config.socket_mode
