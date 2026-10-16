@@ -10,7 +10,15 @@ PYTHONPATH=src python3 -m pytest
 python3 -m build
 ```
 
-The source tree or sdist is the deployable service artifact; `packaging/install.sh` installs its host BPF and systemd payload. The wheel intentionally contains only the Python library and CLI. The packaged service reads `/etc/agentsuite-guardd/config.json`, requires a root-owned mode-0600 Ed25519 seed, restores SQLite state, reconciles live attachment records, authenticates Unix peers with `SO_PEERCRED`, and remains active at `/run/agentsuite-guardd/provider.sock`. There is no signing-key fallback.
+The source tree or sdist is the deployable service artifact;
+`packaging/install.sh` installs the Python application into a dedicated
+`/opt/agentsuite-guardd/venv` environment plus its host BPF and systemd payload;
+it never writes into the distribution-managed Python environment. The wheel
+intentionally contains only the Python library and CLI. The packaged service
+reads `/etc/agentsuite-guardd/config.json`, requires a root-owned mode-0600
+Ed25519 seed, restores SQLite state, reconciles live attachment records,
+authenticates Unix peers with `SO_PEERCRED`, and remains active at
+`/run/agentsuite-guardd/provider.sock`. There is no signing-key fallback.
 
 `MemoryBackend` and `backend: conformance-memory` are explicit test-only modes. The packaged `linux-bpf` backend uses `LinuxBPFAdapter`, which advertises `filesystem/deny-write/v1` only while both pinned kernel maps and all fifteen attached LSM links are independently observable. It compiles each deny path into exact `(generation, device, inode)` entries, enables the exact cgroup target only after all policy entries exist, and reads every map entry and current path identity back from kernel state. Startup reconciles persisted provider, backend, and live-map inventories; detach removes the target first, then policy entries. If any link, map, path identity, or inventory is absent or divergent, negotiation/readback fails closed.
 

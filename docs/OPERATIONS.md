@@ -1,6 +1,11 @@
 # Operations
 
-Run `packaging/install.sh` as root. It creates a random 32-byte root-owned mode-0600 credential if absent, installs configuration, the Gadget loader, and both systemd units, and never prints the credential.
+Run `packaging/install.sh` as root. It installs the Python application and its
+dependencies into the dedicated `/opt/agentsuite-guardd/venv` environment,
+links only the service entry point into `/usr/local/bin`, creates a random
+32-byte root-owned mode-0600 credential if absent, installs configuration, the
+Gadget loader, and both systemd units, and never prints the credential. It does
+not modify the distribution-managed Python environment.
 
 The prerequisite `agentsuite-guardd-gadget.service` compiles the delivered BPF source against host BTF, verifier-loads and attaches all fifteen LSM programs, and pins `guarded_targets`, `guarded_paths`, `filesystem_denials`, and every link under `/sys/fs/bpf/agentsuite-guardd`. It repairs missing links and upgrades programs by loading a complete replacement set against the existing pinned maps before replacing link pins, so active target and policy entries remain intact. Incomplete maps are rebuilt only when the guarded-target map is empty; otherwise startup refuses the unsafe replacement. It also refuses missing BPF LSM, bpffs, clang, bpftool, or unsupported architecture. The provider unit requires this prerequisite.
 

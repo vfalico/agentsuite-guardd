@@ -5,8 +5,12 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-python3 -m pip install --disable-pip-version-check "$ROOT"
-command -v /usr/local/bin/agentsuite-guardd >/dev/null
+VENV=/opt/agentsuite-guardd/venv
+install -d -m 0755 /opt/agentsuite-guardd
+python3 -m venv "$VENV"
+"$VENV/bin/python" -m pip install --disable-pip-version-check --upgrade "$ROOT"
+ln -sfn "$VENV/bin/agentsuite-guardd" /usr/local/bin/agentsuite-guardd
+test -x /usr/local/bin/agentsuite-guardd
 install -d -m 0700 /etc/agentsuite-guardd /var/lib/agentsuite-guardd
 install -d -m 0750 /run/agentsuite-guardd
 install -m 0640 "$ROOT/config/config.json" /etc/agentsuite-guardd/config.json
