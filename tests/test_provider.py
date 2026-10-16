@@ -9,7 +9,12 @@ from agentsuite_guardd.model import (
     object_digest,
     policy_digest,
 )
-from agentsuite_guardd.provider import Provider, proof_message, descriptor_message
+from agentsuite_guardd.provider import (
+    Provider,
+    ProviderNotFound,
+    proof_message,
+    descriptor_message,
+)
 from agentsuite_guardd.store import Store, Conflict
 
 
@@ -59,7 +64,7 @@ class ProviderTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            self.p.reconcile(active["proof"]["activationId"])["state"], "released"
+            self.p.reconcile(self.context.attempt_id)["state"], "released"
         )
 
     def test_descriptor_and_proof_use_ed25519(self):
@@ -139,6 +144,51 @@ class ProviderTests(unittest.TestCase):
                         proof["activationId"], authorization, proof_id, release_id
                     )
 
+    def test_changed_cleanup_retries_conflict_even_after_restart(self):
+        with tempfile.NamedTemporaryFile() as f:
+            first = Provider(Store(f.name), self.backend, self.signer, lambda: self.now)
+            prepared = first.prepare(self.auth)
+            active = first.activate(self.auth, prepared["preparationId"])
+            proof = active["proof"]
+            first.release(
+                proof["activationId"],
+                self.auth.authorization_id,
+                proof["proofId"],
+                "release",
+            )
+            first.cleanup(
+                self.context.attempt_id,
+                proof["activationId"],
+                "cleanup",
+            )
+            restarted = Provider(
+                Store(f.name), self.backend, self.signer, lambda: self.now
+            )
+            self.assertEqual(
+                restarted.cleanup(
+                    self.context.attempt_id,
+                    proof["activationId"],
+                    "cleanup",
+                )["state"],
+                "cleaned",
+            )
+            for attempt_id, activation_id, cleanup_id in (
+                ("wrong", proof["activationId"], "cleanup"),
+                (self.context.attempt_id, proof["activationId"], "changed"),
+            ):
+                with self.subTest(
+                    attempt=attempt_id,
+                    activation=activation_id,
+                    cleanup=cleanup_id,
+                ), self.assertRaises(Conflict):
+                    restarted.cleanup(attempt_id, activation_id, cleanup_id)
+            with self.assertRaises(ProviderNotFound):
+                restarted.cleanup(
+                    "missing",
+                    "activation:missing",
+                    "cleanup",
+                )
+
     def test_restart_reconciliation_fails_closed_when_backend_is_missing(self):
         with tempfile.NamedTemporaryFile() as f:
             backend = MemoryBackend()
@@ -200,12 +250,17 @@ class ProviderTests(unittest.TestCase):
                 "release",
             )
             _, value = provider.store.get(activation)
+            cleanup = {
+                "attemptId": self.context.attempt_id,
+                "activationId": activation,
+                "cleanupId": "cleanup",
+            }
             provider.store.transition(
                 activation,
                 object_digest(value["request"]),
                 "released",
                 "cleaning",
-                value,
+                {**value, "cleanup": cleanup},
             )
             if detached:
                 backend.detach(activation)

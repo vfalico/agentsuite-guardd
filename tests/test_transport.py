@@ -1,3 +1,4 @@
+from base64 import b64encode
 import json, os, socket, tempfile, threading, time, unittest
 from agentsuite_guardd.backend import MemoryBackend, PersistentBackend
 from agentsuite_guardd.crypto import Signer
@@ -8,6 +9,7 @@ from agentsuite_guardd.transport import (
     MAX_FRAME,
     UnixClient,
     UnixServer,
+    authorization_from_object,
     authorization_to_object,
 )
 
@@ -38,6 +40,12 @@ class TransportTests(unittest.TestCase):
         self.thread.join(2)
         self.tmp.cleanup()
 
+    def raw_call(self, request):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(self.socket)
+            client.sendall(json.dumps(request, separators=(",", ":")).encode() + b"\n")
+            return json.loads(client.makefile("rb").readline())
+
     def test_all_external_operations_and_restart_readback(self):
         descriptor = self.client.call("DiscoverDescriptor")
         self.assertEqual(descriptor["endpointId"], "test-endpoint")
@@ -46,7 +54,7 @@ class TransportTests(unittest.TestCase):
                 "NegotiateCapabilities",
                 {"requiredCapabilities": ["filesystem/deny-write/v1"]},
             )["protocolVersion"],
-            "orka.enforcement-provider/v1",
+            "orka.enforcement-provider/v2",
         )
         now = time.time()
         policy = (
@@ -91,10 +99,11 @@ class TransportTests(unittest.TestCase):
             "active",
         )
         self.assertEqual(
-            self.client.call("Reconcile", {"activationId": activation})["state"],
+            self.client.call("Reconcile", {"attemptId": "attempt"})["state"],
             "active",
         )
-        released = self.client.call(
+        self.assertEqual(
+            self.client.call(
             "Release",
             {
                 "activationId": activation,
@@ -102,8 +111,9 @@ class TransportTests(unittest.TestCase):
                 "proofId": proof["proofId"],
                 "releaseId": "release",
             },
+            ),
+            {},
         )
-        self.assertEqual(released["release"]["releaseId"], "release")
         with self.assertRaisesRegex(RuntimeError, "conflict"):
             self.client.call(
                 "Release",
@@ -122,8 +132,15 @@ class TransportTests(unittest.TestCase):
         )
         self.assertEqual(restarted.reconcile_all()[activation]["state"], "released")
         self.assertEqual(
-            self.client.call("Cleanup", {"activationId": activation})["state"],
-            "cleaned",
+            self.client.call(
+                "Cleanup",
+                {
+                    "attemptId": "attempt",
+                    "activationId": activation,
+                    "cleanupId": "cleanup",
+                },
+            ),
+            {},
         )
         cleaned_restart = Provider(
             Store(os.path.join(self.tmp.name, "state.db")),
@@ -132,6 +149,119 @@ class TransportTests(unittest.TestCase):
             endpoint_id="test-endpoint",
         )
         self.assertEqual(cleaned_restart.reconcile_all(), {})
+
+    def test_protocol_downgrade_and_unknown_fields_fail_closed(self):
+        base = {
+            "version": 2,
+            "id": "strict",
+            "operation": "DiscoverDescriptor",
+            "parameters": {},
+        }
+        for name, request in (
+            ("downgrade", {**base, "version": 1}),
+            ("top-level field", {**base, "extra": True}),
+            (
+                "parameter field",
+                {
+                    **base,
+                    "operation": "GetStatus",
+                    "parameters": {"activationId": "missing", "extra": True},
+                },
+            ),
+        ):
+            with self.subTest(name=name):
+                reply = self.raw_call(request)
+                self.assertFalse(reply["ok"])
+                self.assertEqual(reply["error"]["code"], "invalid_request")
+
+    def test_authorization_wire_types_are_exact(self):
+        now = time.time()
+        policy = (
+            b'{"denyWritePaths":["/workspace/source"],'
+            b'"requiredCapabilities":["filesystem/deny-write/v1"],'
+            b'"version":"agentsuite.policy/v1"}'
+        )
+        authorization = Authorization(
+            "auth",
+            Context(
+                "req",
+                "attempt",
+                "workload",
+                "agentsuite-guardd/v1",
+                "orka",
+                "challenge",
+                "idem",
+                policy_digest(policy),
+                policy,
+            ),
+            now - 1,
+            now - 1,
+            now + 60,
+            1,
+        )
+        wire = authorization_to_object(authorization)
+        for name, changed in (
+            ("boolean epoch", {**wire, "epoch": True}),
+            (
+                "scalar capabilities",
+                {
+                    **wire,
+                    "context": {
+                        **wire["context"],
+                        "requiredCapabilities": "filesystem/deny-write/v1",
+                    },
+                },
+            ),
+        ):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                authorization_from_object(changed)
+
+    def test_rfc3339_nanoseconds_are_preserved_for_transcript_identity(self):
+        policy = (
+            b'{"denyWritePaths":["/workspace/source"],'
+            b'"requiredCapabilities":["filesystem/deny-write/v1"],'
+            b'"version":"agentsuite.policy/v1"}'
+        )
+        wire = {
+            "authorizationId": "auth",
+            "context": {
+                "requestId": "req",
+                "attemptId": "attempt",
+                "workloadId": "workload",
+                "providerId": "agentsuite-guardd/v1",
+                "audience": "orka",
+                "challenge": "challenge",
+                "idempotencyKey": "idem",
+                "policyDigest": policy_digest(policy),
+                "policyBytes": b64encode(policy).decode(),
+                "requiredCapabilities": ["filesystem/deny-write/v1"],
+            },
+            "issuedAt": "2026-01-01T00:00:00.123456789Z",
+            "notBefore": "2026-01-01T00:00:00.123456789Z",
+            "expiresAt": "2026-01-01T00:01:00.987654321Z",
+            "epoch": 1,
+        }
+        self.assertEqual(authorization_from_object(wire).object(), wire)
+
+    def test_absent_provider_state_is_typed_not_found(self):
+        for operation, parameters in (
+            ("ReadBack", {"activationId": "missing"}),
+            ("GetProof", {"activationId": "missing"}),
+            ("GetStatus", {"activationId": "missing"}),
+            ("Reconcile", {"attemptId": "missing"}),
+            (
+                "Cleanup",
+                {
+                    "attemptId": "missing",
+                    "activationId": "activation:missing",
+                    "cleanupId": "cleanup",
+                },
+            ),
+        ):
+            with self.subTest(operation=operation), self.assertRaisesRegex(
+                RuntimeError, "^not_found:"
+            ):
+                self.client.call(operation, parameters)
 
     def test_malformed_frame_returns_bound_error(self):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
@@ -145,7 +275,7 @@ class TransportTests(unittest.TestCase):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(self.socket)
             client.sendall(
-                b'{"version":1,"id":"nan","operation":"DiscoverDescriptor",'
+                b'{"version":2,"id":"nan","operation":"DiscoverDescriptor",'
                 b'"parameters":{},"value":NaN}\n'
             )
             reply = json.loads(client.makefile("rb").readline())
@@ -155,7 +285,7 @@ class TransportTests(unittest.TestCase):
 
     def test_exact_limit_frame_is_accepted(self):
         prefix = (
-            b'{"version":1,"id":"limit","operation":"DiscoverDescriptor",'
+            b'{"version":2,"id":"limit","operation":"DiscoverDescriptor",'
             b'"parameters":{},"padding":"'
         )
         suffix = b'"}\n'
@@ -166,7 +296,9 @@ class TransportTests(unittest.TestCase):
             client.connect(self.socket)
             client.sendall(frame)
             reply = json.loads(client.makefile("rb").readline())
-        self.assertTrue(reply["ok"])
+        self.assertFalse(reply["ok"])
+        self.assertEqual(reply["error"]["code"], "invalid_request")
+        self.assertNotEqual(reply["error"]["code"], "frame_too_large")
 
     def test_oversized_frame_without_newline_is_rejected_immediately(self):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:

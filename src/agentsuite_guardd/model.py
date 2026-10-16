@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from base64 import b64encode
 from dataclasses import dataclass
 from hashlib import sha256
 import json
@@ -7,9 +8,11 @@ import math
 import struct
 import time
 
+from .protocol import format_time
+
 POLICY_VERSION = "agentsuite.policy/v1"
 CAPABILITY = "filesystem/deny-write/v1"
-PROTOCOL = "orka.enforcement-provider/v1"
+PROTOCOL = "orka.enforcement-provider/v2"
 DOMAIN = b"agentsuite-effective-policy\x00v1\x00"
 
 
@@ -80,7 +83,7 @@ class Context:
             "challenge": self.challenge,
             "idempotencyKey": self.idempotency_key,
             "policyDigest": self.policy_digest,
-            "policyBytes": self.policy_bytes.hex(),
+            "policyBytes": b64encode(self.policy_bytes).decode(),
             "requiredCapabilities": list(self.required_capabilities),
         }
 
@@ -93,6 +96,9 @@ class Authorization:
     not_before: float
     expires_at: float
     epoch: int
+    issued_at_text: str | None = None
+    not_before_text: str | None = None
+    expires_at_text: str | None = None
 
     def validate(self, now: float | None = None) -> None:
         current = time.time() if now is None else now
@@ -116,8 +122,8 @@ class Authorization:
         return {
             "authorizationId": self.authorization_id,
             "context": self.context.object(),
-            "issuedAt": self.issued_at,
-            "notBefore": self.not_before,
-            "expiresAt": self.expires_at,
+            "issuedAt": self.issued_at_text or format_time(self.issued_at),
+            "notBefore": self.not_before_text or format_time(self.not_before),
+            "expiresAt": self.expires_at_text or format_time(self.expires_at),
             "epoch": self.epoch,
         }

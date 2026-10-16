@@ -15,6 +15,29 @@ class PolicyCompatibilityTests(unittest.TestCase):
         plan = compile_policy(policy, digest, "cgroup:/sys/fs/cgroup/test")
         self.assertEqual(plan.policy_digest, digest)
 
+    def test_suite_utf16_ordering_vector_compiles(self):
+        policy = (
+            '{"denyWritePaths":["/workspace/source","/𐀀","/\ue000"],'
+            '"requiredCapabilities":["filesystem/deny-write/v1"],'
+            '"version":"agentsuite.policy/v1"}'
+        ).encode()
+        digest = "sha256:c06512cf93ae8e9275dc8196425734668f9682e1747dd6ec2d14012e18e80188"
+        plan = compile_policy(policy, digest, "cgroup:/sys/fs/cgroup/test")
+        self.assertEqual(plan.deny_write_paths, ("/workspace/source", "/𐀀", "/\ue000"))
+
+    def test_unicode_codepoint_order_is_not_accepted_as_canonical(self):
+        policy = (
+            '{"denyWritePaths":["/workspace/source","/\ue000","/𐀀"],'
+            '"requiredCapabilities":["filesystem/deny-write/v1"],'
+            '"version":"agentsuite.policy/v1"}'
+        ).encode()
+        with self.assertRaisesRegex(ValueError, "paths are not canonical"):
+            compile_policy(
+                policy,
+                policy_digest(policy),
+                "cgroup:/sys/fs/cgroup/test",
+            )
+
     def test_noncanonical_key_order_is_rejected(self):
         policy = (
             b'{"version":"agentsuite.policy/v1",'

@@ -1,77 +1,26 @@
 from __future__ import annotations
 
 from base64 import b64encode
-from hashlib import sha256
 import time
 
 from .backend import BackendError
-from .model import Authorization, PROTOCOL, canonical, object_digest
+from .model import Authorization, object_digest
 from .policy import compile_policy
+from .protocol import (
+    PROTOCOL,
+    authorization_digest_for_model,
+    descriptor_message,
+    format_time,
+    proof_message,
+    readback_digest,
+)
 from .store import Conflict
 
 PROVIDER_ID = "agentsuite-guardd/v1"
 
 
-def format_time(value: float) -> str:
-    """Format an epoch value exactly like Go's RFC3339Nano."""
-    from datetime import datetime, timezone
-
-    rendered = (
-        datetime.fromtimestamp(value, timezone.utc).isoformat().replace("+00:00", "Z")
-    )
-    if "." in rendered:
-        head, fraction = rendered[:-1].split(".", 1)
-        fraction = fraction.rstrip("0")
-        rendered = f"{head}.{fraction}Z" if fraction else f"{head}Z"
-    return rendered
-
-
-def proof_message(proof: dict) -> bytes:
-    fields = (
-        PROTOCOL,
-        proof["proofId"],
-        proof["authorizationId"],
-        proof["activationId"],
-        proof["workloadId"],
-        proof["providerId"],
-        proof["audience"],
-        proof["challenge"],
-        proof["policyDigest"],
-        proof["readBackDigest"],
-        proof["keyId"],
-        str(proof["epoch"]),
-        proof["issuedAt"],
-        proof["expiresAt"],
-    )
-    return "\x00".join(fields).encode()
-
-
-def descriptor_message(descriptor: dict) -> bytes:
-    fields = (
-        PROTOCOL,
-        descriptor["providerId"],
-        descriptor["endpointId"],
-        descriptor["algorithm"],
-        descriptor["keyId"],
-        descriptor["publicKey"],
-        str(descriptor["epoch"]),
-        descriptor["issuedAt"],
-        descriptor["expiresAt"],
-        ",".join(descriptor["protocolVersions"]),
-        ",".join(descriptor["capabilities"]),
-    )
-    return "\x00".join(fields).encode()
-
-
-def readback_digest(readback: dict) -> str:
-    """Match the provider-neutral Orka readback digest contract exactly."""
-    fields = (
-        readback["activationId"],
-        readback["targetId"],
-        readback["policyDigest"],
-        readback["configurationDigest"],
-    )
-    return "sha256:" + sha256("\x00".join(fields).encode()).hexdigest()
+class ProviderNotFound(Exception):
+    pass
 
 
 class Provider:
@@ -92,6 +41,12 @@ class Provider:
         self.now = now
         self.epoch = epoch
         self.endpoint_id = endpoint_id
+
+    def _get(self, operation_id: str) -> tuple[str, dict]:
+        try:
+            return self.store.get(operation_id)
+        except KeyError as error:
+            raise ProviderNotFound(f"{operation_id} is absent") from error
 
     def descriptor(self) -> dict:
         now = self.now()
@@ -134,10 +89,11 @@ class Provider:
             context.policy_digest,
             context.workload_id,
         )
+        wire_authorization = authorization.object()
         value = {
             "preparationId": operation_id,
-            "authorization": authorization.object(),
-            "authorizationDigest": object_digest(authorization.object()),
+            "authorization": wire_authorization,
+            "authorizationDigest": authorization_digest_for_model(authorization),
             "contextDigest": object_digest(context.object()),
             "plan": plan.object(),
             "configurationDigest": plan.configuration_digest,
@@ -146,24 +102,25 @@ class Provider:
 
     def activate(self, authorization: Authorization, preparation_id: str) -> dict:
         self._validate_authorization(authorization)
-        prepared_state, prepared = self.store.get(preparation_id)
+        prepared_state, prepared = self._get(preparation_id)
         if prepared_state != "reserved":
             raise Conflict("preparation is not reserved")
 
-        authorization_digest = object_digest(authorization.object())
+        wire_authorization = authorization.object()
+        auth_digest = authorization_digest_for_model(authorization)
         context_digest = object_digest(authorization.context.object())
-        if prepared["authorizationDigest"] != authorization_digest:
+        if prepared["authorizationDigest"] != auth_digest:
             raise Conflict("preparation authorization mismatch")
         if prepared["contextDigest"] != context_digest:
             raise Conflict("preparation context mismatch")
-        if prepared["authorization"] != authorization.object():
+        if prepared["authorization"] != wire_authorization:
             raise Conflict("preparation authorization changed")
 
         context = authorization.context
         activation_id = "activation:" + context.attempt_id
         request = {
-            "authorization": authorization.object(),
-            "authorizationDigest": authorization_digest,
+            "authorization": wire_authorization,
+            "authorizationDigest": auth_digest,
             "contextDigest": context_digest,
             "preparationId": preparation_id,
             "configurationDigest": prepared["configurationDigest"],
@@ -171,7 +128,7 @@ class Provider:
         request_digest = object_digest(request)
         self.store.reserve(activation_id, request_digest, request)
 
-        state, current = self.store.get(activation_id)
+        state, current = self._get(activation_id)
         if state in {"active", "released"}:
             if current.get("request") != request:
                 raise Conflict("activation request identity conflict")
@@ -203,6 +160,7 @@ class Provider:
         proof = {
             "proofId": "proof:" + context.attempt_id,
             "authorizationId": authorization.authorization_id,
+            "authorizationDigest": auth_digest,
             "activationId": activation_id,
             "workloadId": context.workload_id,
             "providerId": context.provider_id,
@@ -228,10 +186,11 @@ class Provider:
         )
 
     def readback(self, activation_id: str) -> dict:
+        self._get(activation_id)
         return self.backend.readback(activation_id)
 
     def proof(self, activation_id: str) -> dict:
-        state, value = self.store.get(activation_id)
+        state, value = self._get(activation_id)
         if state not in {"active", "released"}:
             raise ValueError("activation has no proof")
         return value["proof"]
@@ -243,7 +202,7 @@ class Provider:
         proof_id: str,
         release_id: str,
     ) -> dict:
-        state, value = self.store.get(activation_id)
+        state, value = self._get(activation_id)
         proof = value["proof"]
         request = {
             "activationId": activation_id,
@@ -270,15 +229,16 @@ class Provider:
         )
 
     def status(self, activation_id: str) -> dict:
-        state, value = self.store.get(activation_id)
+        state, value = self._get(activation_id)
         return {
             "activationId": activation_id,
             "state": state,
             "proofId": value.get("proof", {}).get("proofId"),
         }
 
-    def reconcile(self, activation_id: str) -> dict:
-        state, value = self.store.get(activation_id)
+    def reconcile(self, attempt_id: str) -> dict:
+        activation_id = "activation:" + attempt_id
+        state, value = self._get(activation_id)
         if state not in {"active", "released"}:
             raise ValueError("activation cannot be reconciled")
         readback = self.backend.readback(activation_id)
@@ -296,7 +256,15 @@ class Provider:
         )
         for activation_id in cleaning_ids:
             try:
-                results[activation_id] = self.cleanup(activation_id)
+                _, value = self.store.get(activation_id)
+                cleanup = value.get("cleanup")
+                if not cleanup:
+                    raise ValueError("cleaning activation has no cleanup identity")
+                results[activation_id] = self.cleanup(
+                    cleanup["attemptId"],
+                    cleanup["activationId"],
+                    cleanup["cleanupId"],
+                )
             except (
                 Exception
             ) as error:  # AUDITED: BROAD — startup quarantines interrupted cleanup failures
@@ -319,7 +287,9 @@ class Provider:
             return {"backend-inventory": {"state": "quarantined", "error": str(error)}}
         for activation_id in activation_ids:
             try:
-                results[activation_id] = self.reconcile(activation_id)
+                results[activation_id] = self.reconcile(
+                    activation_id.removeprefix("activation:")
+                )
             except (
                 Exception
             ) as error:  # AUDITED: BROAD — startup quarantines unknown failures
@@ -329,11 +299,21 @@ class Provider:
                 }
         return results
 
-    def cleanup(self, activation_id: str) -> dict:
-        state, value = self.store.get(activation_id)
+    def cleanup(self, attempt_id: str, activation_id: str, cleanup_id: str) -> dict:
+        if activation_id != "activation:" + attempt_id:
+            raise Conflict("cleanup attempt and activation do not match")
+        request = {
+            "attemptId": attempt_id,
+            "activationId": activation_id,
+            "cleanupId": cleanup_id,
+        }
+        state, value = self._get(activation_id)
         if state == "cleaned":
+            if value.get("cleanup") != request:
+                raise Conflict("cleanup identity conflict")
             return {"activationId": activation_id, "state": "cleaned"}
         if state == "released":
+            value = {**value, "cleanup": request}
             self.store.transition(
                 activation_id,
                 object_digest(value["request"]),
@@ -341,7 +321,10 @@ class Provider:
                 "cleaning",
                 value,
             )
-        elif state != "cleaning":
+        elif state == "cleaning":
+            if value.get("cleanup") != request:
+                raise Conflict("cleanup identity conflict")
+        else:
             raise Conflict("activation must be released before cleanup")
         self.backend.detach(activation_id)
         self.store.transition(

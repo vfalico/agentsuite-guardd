@@ -47,6 +47,13 @@ def _pairs_hook(pairs):
     return d
 
 
+def _utf16_sort_key(value: str) -> bytes:
+    try:
+        return value.encode("utf-16-be")
+    except UnicodeEncodeError as error:
+        raise ValueError("invalid deny path") from error
+
+
 def compile_policy(data: bytes, expected_digest: str, target_id: str) -> BackendPlan:
     if policy_digest(data) != expected_digest:
         raise ValueError("policy digest mismatch")
@@ -69,7 +76,7 @@ def compile_policy(data: bytes, expected_digest: str, target_id: str) -> Backend
         raise ValueError("denyWritePaths must be a nonempty list")
     if any(not isinstance(path, str) for path in paths):
         raise ValueError("invalid deny path")
-    if paths != sorted(set(paths)):
+    if len(paths) != len(set(paths)) or paths != sorted(paths, key=_utf16_sort_key):
         raise ValueError("policy paths are not canonical")
     for p in paths:
         if (

@@ -1,8 +1,10 @@
 from __future__ import annotations
-from base64 import b64decode, b64encode
-from dataclasses import asdict
-import json, os, socket, struct, threading
+from base64 import b64decode
+from datetime import datetime, timezone
+import json, os, re, socket, struct, threading
 from .model import Authorization, Context
+from .provider import ProviderNotFound
+from .protocol import TRANSPORT_VERSION
 from .store import Conflict
 
 MAX_FRAME = 1024 * 1024
@@ -12,10 +14,74 @@ def _reject_json_constant(value: str) -> None:
     raise ValueError(f"invalid JSON constant: {value}")
 
 
+def _exact_object(value, fields: set[str], name: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{name} must be an object")
+    unknown = set(value) - fields
+    missing = fields - set(value)
+    if unknown:
+        raise ValueError(f"{name} has unknown fields: {', '.join(sorted(unknown))}")
+    if missing:
+        raise ValueError(f"{name} is missing fields: {', '.join(sorted(missing))}")
+    return value
+
+
+def _parse_time(value: str) -> float:
+    if not isinstance(value, str):
+        raise ValueError("authorization timestamp must be a string")
+    match = re.fullmatch(
+        r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?Z", value
+    )
+    if not match:
+        raise ValueError("authorization timestamp must be RFC3339Nano UTC")
+    fraction = (match.group(2) or "").ljust(6, "0")[:6]
+    parsed = datetime.strptime(match.group(1), "%Y-%m-%dT%H:%M:%S").replace(
+        tzinfo=timezone.utc,
+        microsecond=int(fraction or "0"),
+    )
+    return parsed.timestamp()
+
+
 def authorization_from_object(value: dict) -> Authorization:
-    c = value["context"]
+    value = _exact_object(
+        value,
+        {
+            "authorizationId",
+            "context",
+            "issuedAt",
+            "notBefore",
+            "expiresAt",
+            "epoch",
+        },
+        "authorization",
+    )
+    c = _exact_object(
+        value["context"],
+        {
+            "requestId",
+            "attemptId",
+            "workloadId",
+            "providerId",
+            "audience",
+            "challenge",
+            "idempotencyKey",
+            "policyDigest",
+            "policyBytes",
+            "requiredCapabilities",
+        },
+        "authorization context",
+    )
     policy = c["policyBytes"]
-    raw = b64decode(policy, validate=True) if isinstance(policy, str) else bytes(policy)
+    if not isinstance(policy, str):
+        raise ValueError("policyBytes must be base64 text")
+    raw = b64decode(policy, validate=True)
+    capabilities = c["requiredCapabilities"]
+    if not isinstance(capabilities, list) or any(
+        not isinstance(capability, str) for capability in capabilities
+    ):
+        raise ValueError("requiredCapabilities must be a string array")
+    if type(value["epoch"]) is not int:
+        raise ValueError("authorization epoch must be an integer")
     ctx = Context(
         c["requestId"],
         c["attemptId"],
@@ -26,39 +92,23 @@ def authorization_from_object(value: dict) -> Authorization:
         c["idempotencyKey"],
         c["policyDigest"],
         raw,
-        tuple(c["requiredCapabilities"]),
+        tuple(capabilities),
     )
     return Authorization(
         value["authorizationId"],
         ctx,
-        float(value["issuedAt"]),
-        float(value["notBefore"]),
-        float(value["expiresAt"]),
-        int(value["epoch"]),
+        _parse_time(value["issuedAt"]),
+        _parse_time(value["notBefore"]),
+        _parse_time(value["expiresAt"]),
+        value["epoch"],
+        value["issuedAt"],
+        value["notBefore"],
+        value["expiresAt"],
     )
 
 
 def authorization_to_object(a: Authorization) -> dict:
-    c = a.context
-    return {
-        "authorizationId": a.authorization_id,
-        "issuedAt": a.issued_at,
-        "notBefore": a.not_before,
-        "expiresAt": a.expires_at,
-        "epoch": a.epoch,
-        "context": {
-            "requestId": c.request_id,
-            "attemptId": c.attempt_id,
-            "workloadId": c.workload_id,
-            "providerId": c.provider_id,
-            "audience": c.audience,
-            "challenge": c.challenge,
-            "idempotencyKey": c.idempotency_key,
-            "policyDigest": c.policy_digest,
-            "policyBytes": b64encode(c.policy_bytes).decode(),
-            "requiredCapabilities": list(c.required_capabilities),
-        },
-    }
+    return a.object()
 
 
 class UnixServer:
@@ -109,7 +159,7 @@ class UnixServer:
 
     def _serve_connection(self, conn):
         with conn:
-            pid, uid, gid = struct.unpack(
+            _pid, uid, _gid = struct.unpack(
                 "3i",
                 conn.getsockopt(
                     socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i")
@@ -119,7 +169,7 @@ class UnixServer:
                 self._send(
                     conn,
                     {
-                        "version": 1,
+                        "version": TRANSPORT_VERSION,
                         "ok": False,
                         "error": {
                             "code": "unauthenticated",
@@ -143,7 +193,7 @@ class UnixServer:
                     req = json.loads(line, parse_constant=_reject_json_constant)
                     result = self.dispatch(req)
                     out = {
-                        "version": 1,
+                        "version": TRANSPORT_VERSION,
                         "id": req.get("id"),
                         "ok": True,
                         "result": result,
@@ -151,6 +201,12 @@ class UnixServer:
                 except Conflict as e:
                     out = self._error(
                         "conflict",
+                        str(e),
+                        req.get("id") if isinstance(req, dict) else None,
+                    )
+                except ProviderNotFound as e:
+                    out = self._error(
+                        "not_found",
                         str(e),
                         req.get("id") if isinstance(req, dict) else None,
                     )
@@ -172,7 +228,7 @@ class UnixServer:
 
     def _error(self, code, message, request_id=None):
         return {
-            "version": 1,
+            "version": TRANSPORT_VERSION,
             "id": request_id,
             "ok": False,
             "error": {"code": code, "message": message},
@@ -184,34 +240,71 @@ class UnixServer:
         )
 
     def dispatch(self, req):
-        if req.get("version") != 1:
+        req = _exact_object(
+            req, {"version", "id", "operation", "parameters"}, "request"
+        )
+        if req["version"] != TRANSPORT_VERSION:
             raise ValueError("unsupported transport version")
-        op = req.get("operation")
-        p = req.get("parameters") or {}
+        if not isinstance(req["id"], str) or not req["id"]:
+            raise ValueError("request id is required")
+        if not isinstance(req["operation"], str) or not req["operation"]:
+            raise ValueError("operation is required")
+        op = req["operation"]
+        p = req["parameters"]
         if op == "DiscoverDescriptor":
+            _exact_object(p, set(), "parameters")
             return self.provider.descriptor()
         if op == "NegotiateCapabilities":
+            p = _exact_object(p, {"requiredCapabilities"}, "parameters")
             return self.provider.negotiate(p["requiredCapabilities"])
         if op == "Prepare":
-            return self.provider.prepare(authorization_from_object(p["authorization"]))
+            p = _exact_object(p, {"authorization"}, "parameters")
+            prepared = self.provider.prepare(
+                authorization_from_object(p["authorization"])
+            )
+            return {"preparationId": prepared["preparationId"]}
         if op == "Activate":
-            return self.provider.activate(
+            p = _exact_object(
+                p, {"authorization", "preparationId"}, "parameters"
+            )
+            active = self.provider.activate(
                 authorization_from_object(p["authorization"]), p["preparationId"]
             )
+            return {
+                "proof": {
+                    "activationId": active["proof"]["activationId"],
+                }
+            }
         if op == "ReadBack":
+            p = _exact_object(p, {"activationId"}, "parameters")
             return self.provider.readback(p["activationId"])
         if op == "GetProof":
+            p = _exact_object(p, {"activationId"}, "parameters")
             return self.provider.proof(p["activationId"])
         if op == "Release":
-            return self.provider.release(
+            p = _exact_object(
+                p,
+                {"activationId", "authorizationId", "proofId", "releaseId"},
+                "parameters",
+            )
+            self.provider.release(
                 p["activationId"], p["authorizationId"], p["proofId"], p["releaseId"]
             )
+            return {}
         if op == "GetStatus":
-            return self.provider.status(p["activationId"])
+            p = _exact_object(p, {"activationId"}, "parameters")
+            return {"state": self.provider.status(p["activationId"])["state"]}
         if op == "Reconcile":
-            return self.provider.reconcile(p["activationId"])
+            p = _exact_object(p, {"attemptId"}, "parameters")
+            return {"state": self.provider.reconcile(p["attemptId"])["state"]}
         if op == "Cleanup":
-            return self.provider.cleanup(p["activationId"])
+            p = _exact_object(
+                p, {"attemptId", "activationId", "cleanupId"}, "parameters"
+            )
+            self.provider.cleanup(
+                p["attemptId"], p["activationId"], p["cleanupId"]
+            )
+            return {}
         raise ValueError("unknown operation")
 
 
@@ -224,7 +317,7 @@ class UnixClient:
     def call(self, operation: str, parameters=None):
         self.counter += 1
         req = {
-            "version": 1,
+            "version": TRANSPORT_VERSION,
             "id": str(self.counter),
             "operation": operation,
             "parameters": parameters or {},
