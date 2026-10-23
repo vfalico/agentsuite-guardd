@@ -1,0 +1,1 @@
+{"network":{"egressAllow":[{"address":"169.254.17.1","port":28292,"protocol":"TCP"},{"address":"169.254.17.1","port":28295,"protocol":"TCP"},{"address":"169.254.17.1","port":28296,"protocol":"TCP"}]},"requiredCapabilities":["network/egress-allow/v1"],"version":"agentsuite.policy/v2"}

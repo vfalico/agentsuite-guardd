@@ -1,0 +1,8 @@
+id: greeter
+instructions: instructions.md
+model:
+    protocol: openai-compatible
+    model: test-model
+runtime:
+    id: orka
+policy: policy.json

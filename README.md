@@ -1,5 +1,11 @@
 # AgentSuite Guardd
 
+> **Cross-runtime PoC:** see [POC.md](POC.md) for the frozen source pins,
+> setup, reproducible experiments, demonstrated results and limitations.
+> This branch is an experimental reference, not a production release or
+> an upstream-ready proposal. The network lane below is distinct from the
+> retained historical filesystem provider.
+
 AgentSuite Guardd includes a runtime-neutral whole-requirement network enforcement service and a retained compatibility implementation of the historical Orka enforcement-provider protocol. It validates exact canonical AgentSuite policy bytes, negotiates capabilities fail closed, performs activation plus independent readback, signs authenticated descriptors and proofs, and exposes all lifecycle operations over a versioned Unix socket.
 
 ## Build and test

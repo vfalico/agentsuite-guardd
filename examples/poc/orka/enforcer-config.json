@@ -1,0 +1,8 @@
+{
+  "Socket": "/run/orka-enforcement/socket",
+  "Name": "complete-policy-peer",
+  "Revision": "v1",
+  "CgroupMount": "/run/orka-cgroups",
+  "StateRoot": "/run/orka-enforcement/associations",
+  "NamespaceState": true
+}

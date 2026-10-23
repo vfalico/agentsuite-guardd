@@ -1,0 +1,60 @@
+diff --git a/go/core/pkg/app/native_app_test.go b/go/core/pkg/app/native_app_test.go
+index 2460a719..94d28a5a 100644
+--- a/go/core/pkg/app/native_app_test.go
++++ b/go/core/pkg/app/native_app_test.go
+@@ -244,12 +244,51 @@ func TestCurrentKaimahiCodexRealAdmission(t *testing.T) {
+ 		evaluate.Env = create.Env
+ 		result, e = evaluate.CombinedOutput()
+ 		require.NoError(t, os.WriteFile(filepath.Join(root, "kmx-eval.log"), result, 0600))
+-		require.NoError(t, e, string(result))
++		if os.Getenv("EXECUTION_NATIVE_NETWORK_INDEPENDENT") == "1" {
++			// The native probe deliberately returns an error, never an inferred answer.
++			require.Error(t, e, "network-independent evaluation must not manufacture success")
++		} else {
++			require.NoError(t, e, string(result))
++		}
+ 		resultRaw, readErr := os.ReadFile(filepath.Join(private, "kmx-result.json"))
+-		require.NoError(t, readErr)
+-		require.NoError(t, os.WriteFile(filepath.Join(root, "kmx-result.json"), resultRaw, 0600))
++		if os.Getenv("EXECUTION_NATIVE_NETWORK_INDEPENDENT") == "1" && os.IsNotExist(readErr) {
++			require.NoError(t, os.WriteFile(filepath.Join(root, "kmx-no-inference-receipt"), []byte("public eval failed; no inference result file"), 0600))
++		} else {
++			require.NoError(t, readErr)
++			require.NoError(t, os.WriteFile(filepath.Join(root, "kmx-result.json"), resultRaw, 0600))
++		}
+ 		require.NoError(t, os.WriteFile(filepath.Join(root, "current-host.json"), hostRaw, 0600))
+-		t.Log("CURRENT_KAIMAHI_PUBLIC_CLI_NATIVE_PASS public kmx create/eval, normal app reconciliation, public Session and Task, actual native tool and deletion")
++		if os.Getenv("EXECUTION_NATIVE_NETWORK_INDEPENDENT") == "1" {
++			// Require actual native evidence exported by the owning compute fixture.
++			native, err := os.ReadFile(filepath.Join(root, "guest-output.log"))
++			require.NoError(t, err)
++
++			var observation map[string]any
++			for _, line := range strings.Split(string(native), "\n") {
++				var entry struct {
++					Message string `json:"message"`
++				}
++				if err := json.Unmarshal([]byte(line), &entry); err != nil {
++					continue
++				}
++				if offset := strings.Index(entry.Message, "NETWORK_INDEPENDENT_NATIVE_PROBE_RESULT "); offset >= 0 {
++					require.NoError(t, json.Unmarshal([]byte(entry.Message[offset+len("NETWORK_INDEPENDENT_NATIVE_PROBE_RESULT "):]), &observation))
++				}
++			}
++			require.NotNil(t, observation, "actual native result required")
++			require.Contains(t, observation, "context_error")
++			require.Nil(t, observation["context_error"], "cancellation is not denial proof")
++			require.Equal(t, "169.254.17.1:28296", observation["address"])
++			if os.Getenv("EXECUTION_PUBLIC_NATIVE_SCENARIO") == "empty" {
++				require.Equal(t, true, observation["errno_eperm"])
++			} else {
++				require.Nil(t, observation["error"])
++				require.Equal(t, false, observation["errno_eperm"])
++			}
++			t.Log("CURRENT_KAIMAHI_PUBLIC_NETWORK_INDEPENDENT_ATTEMPT_NO_INFERENCE_RECEIPT")
++		} else {
++			t.Log("CURRENT_KAIMAHI_PUBLIC_CLI_NATIVE_PASS public kmx create/eval, normal app reconciliation, public Session and Task, actual native tool and deletion")
++		}
+ 		t.Log("CURRENT_REAL_NATIVE_GOLDEN_PREPARATION_READY_PASS")
+ 		return
+ 	}

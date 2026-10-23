@@ -1,0 +1,99 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "orka-result-reader",
+        "namespace": "poc-orka-normal"
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "task-read",
+        "namespace": "poc-orka-normal"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "core.orka.ai"
+          ],
+          "resources": [
+            "tasks"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "task-read",
+        "namespace": "poc-orka-normal"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "orka-result-reader",
+          "namespace": "poc-orka-normal"
+        }
+      ],
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "task-read"
+      }
+    },
+    {
+      "apiVersion": "core.orka.ai/v1alpha1",
+      "kind": "Agent",
+      "metadata": {
+        "name": "sample",
+        "namespace": "poc-orka-normal"
+      },
+      "spec": {
+        "runtime": {
+          "type": "codex",
+          "contractVersion": "orka.harness.v2"
+        },
+        "model": {
+          "name": "test-model"
+        },
+        "systemPrompt": {
+          "inline": "Use native tools to probe the authored network ceiling and answer NETWORK_NATIVE_OK."
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "orka-api",
+        "namespace": "poc-orka-normal",
+        "labels": {
+          "app.kubernetes.io/name": "orka"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "orka",
+          "app.kubernetes.io/component": "controller"
+        },
+        "ports": [
+          {
+            "name": "api",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ]
+      }
+    }
+  ]
+}

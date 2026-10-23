@@ -1,0 +1,8 @@
+{
+  "format": "agentsuite.policy/v2",
+  "bytes": "eyJuZXR3b3JrIjp7ImVncmVzc0FsbG93IjpbeyJhZGRyZXNzIjoiMTY5LjI1NC4xNy4xIiwicG9ydCI6MjgyOTIsInByb3RvY29sIjoiVENQIn0seyJhZGRyZXNzIjoiMTY5LjI1NC4xNy4xIiwicG9ydCI6MjgyOTUsInByb3RvY29sIjoiVENQIn0seyJhZGRyZXNzIjoiMTY5LjI1NC4xNy4xIiwicG9ydCI6MjgyOTYsInByb3RvY29sIjoiVENQIn1dfSwicmVxdWlyZWRDYXBhYmlsaXRpZXMiOlsibmV0d29yay9lZ3Jlc3MtYWxsb3cvdjEiXSwidmVyc2lvbiI6ImFnZW50c3VpdGUucG9saWN5L3YyIn0=",
+  "digest": "sha256:f95887f34b575016ab3b8ff3c225788fe1f90df416a962ce2aaf0bc62c72c106",
+  "capabilities": [
+    "network/egress-allow/v1"
+  ]
+}

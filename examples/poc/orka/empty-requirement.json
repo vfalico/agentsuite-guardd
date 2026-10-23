@@ -1,0 +1,8 @@
+{
+  "format": "agentsuite.policy/v2",
+  "bytes": "eyJuZXR3b3JrIjp7ImVncmVzc0FsbG93IjpbXX0sInJlcXVpcmVkQ2FwYWJpbGl0aWVzIjpbIm5ldHdvcmsvZWdyZXNzLWFsbG93L3YxIl0sInZlcnNpb24iOiJhZ2VudHN1aXRlLnBvbGljeS92MiJ9",
+  "digest": "sha256:81cc908f3f1f03a4eb027ec9cec5cfcf6a9a4d2df0a40654db3fc02ac96586a5",
+  "capabilities": [
+    "network/egress-allow/v1"
+  ]
+}

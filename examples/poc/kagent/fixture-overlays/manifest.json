@@ -1,0 +1,18 @@
+{
+  "classification": "Publication fixture integrity; not a new native qualification",
+  "overlays": {
+    "kagent": {
+      "base_commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "path": "go/core/pkg/app/native_app_test.go",
+      "patch_sha256": "e2f2c2ea1b115fdd0308fb6ec1c33441a1d75f34a90e3b71dd509a7d4b9c9074",
+      "result_sha256": "815eff7018e3d048cba0de77ac1f1e0d51b8b3a258d33729294d1d5b41f9928d"
+    },
+    "substrate-kagent": {
+      "base_commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "path": "cmd/ateom-microvm/native_sessions_tools_linux_test.go",
+      "patch_sha256": "52529ef8461869a158c9e063e7b2c5bc0af3f1c142029a77ca0442a47f31c855",
+      "result_sha256": "c90d62f47dd6361427c983fe20f273d1ef222f945ac7e0f64e5128354ea27116"
+    }
+  },
+  "workload_sha256": "0de26be0196bebca054bf2b447355226db0dbf5b92772249506bf812f4239067"
+}

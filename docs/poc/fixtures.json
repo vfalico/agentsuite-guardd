@@ -1,0 +1,546 @@
+{
+  "classification": "Source-derived native test/input index; not execution evidence",
+  "fixtures": [
+    {
+      "repository": "orka",
+      "file": "cmd/cli/session_migrate_limits_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestMigrationBundleLimitConfiguration",
+        "TestMigrationJournalAboveOldLimitAndRetryPolicy"
+      ],
+      "environment": [
+        "ORKA_NATIVE_SESSION_MAX_BYTES"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/cmd/cli/session_migrate_limits_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "internal/controller/acp_native_session_process_crash_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestACPDispatcherNativeProcessCrashChild",
+        "TestNativeProcessCrashRESTConfig",
+        "TestACPDispatcherNativeSessionProcessCrash"
+      ],
+      "environment": [
+        "HOME",
+        "ORKA_NATIVE_CRASH_KUBECONFIG"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/internal/controller/acp_native_session_process_crash_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "internal/controller/live_suite_network_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestLiveKaimahiControllerGuarddNative"
+      ],
+      "environment": [
+        "KUBECONFIG",
+        "ORKA_LIVE_CONTEXT",
+        "ORKA_LIVE_KMX",
+        "ORKA_LIVE_MODE",
+        "ORKA_LIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/internal/controller/live_suite_network_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "internal/controller/neutral_live_suite_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestNeutralLiveKaimahiControllerNative"
+      ],
+      "environment": [
+        "KUBECONFIG",
+        "ORKA_LIVE_CONTEXT",
+        "ORKA_LIVE_KMX",
+        "ORKA_LIVE_MODE",
+        "ORKA_LIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/internal/controller/neutral_live_suite_linux_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/enforcementunix/config_native_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestNativeDelegatedConfiguration"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_CGROUP_MOUNT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/enforcementunix/config_native_linux_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/enforcementunix/native_recover_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestNativeRestartCleanupOnly"
+      ],
+      "environment": [
+        "ORKA_NATIVE_RECOVER_ROOT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/enforcementunix/native_recover_linux_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/live_network_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestLiveNativeNetworkRuntime"
+      ],
+      "environment": [
+        "ORKA_LIVE_MODE",
+        "ORKA_LIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/live_network_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/native_capture_process_crash_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestSupervisorNativeCaptureProcessCrash",
+        "TestSupervisorNativeCaptureProcessCrashHelper"
+      ],
+      "environment": [
+        "ORKA_NATIVE_CAPTURE_CRASH_HELPER_ROOT"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/native_capture_process_crash_linux_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/native_codex_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestPinnedNativeCodexACPRoundTrip"
+      ],
+      "environment": [
+        "ORKA_NATIVE_CODEX_TEST"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/native_codex_linux_test.go"
+    },
+    {
+      "repository": "orka",
+      "file": "workers/acp/supervisor/neutral_live_network_linux_test.go",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tests": [
+        "TestNeutralLiveNativeNetworkRuntime"
+      ],
+      "environment": [
+        "ORKA_LIVE_MODE",
+        "ORKA_LIVE_ROOT",
+        "ORKA_NEUTRAL_EXEC_HELPER"
+      ],
+      "source": "https://github.com/vfalico/orka-public/blob/f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e/workers/acp/supervisor/neutral_live_network_linux_test.go"
+    },
+    {
+      "repository": "kaimahi",
+      "file": "internal/kmx/app/suite_agentsessions_test.go",
+      "commit": "5536ba6c4eee1ef95c849ede2914e1ced26d0861",
+      "tests": [
+        "TestSuiteSessionsEvaluationFullPassAndExactPush",
+        "TestSuiteSessionsEvaluationStopsWithoutExport",
+        "TestSuiteSessionsLatePublicationFailureReportsExistingCompleteProof",
+        "TestSuiteSessionsFailurePreservesCauseWithoutPrintingPayload",
+        "TestSuiteSessionsJudgedRepeats",
+        "TestSuiteSessionsDevelopmentSelectionRefusesBeforeEffects",
+        "TestSuitePolicyPublicEvalRefusesHostCallbacksBeforeModel",
+        "TestSuitePolicyPublicEvalNativeTransportAndReplay",
+        "TestSuiteToolchatPublicEvaluationAndReplay"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_COMPUTE_SOURCE",
+        "EXECUTION_ORDINARY_SESSIONS_BINARY",
+        "EXECUTION_PUBLIC_NATIVE_ROOT",
+        "EXECUTION_PUBLIC_NATIVE_SCENARIO",
+        "EXECUTION_SHARED_POLICY_ENVELOPE"
+      ],
+      "source": "https://github.com/vfalico/kaimahi-public/blob/5536ba6c4eee1ef95c849ede2914e1ced26d0861/internal/kmx/app/suite_agentsessions_test.go"
+    },
+    {
+      "repository": "kaimahi",
+      "file": "internal/kmx/app/suite_kagent_native_a2a_test.go",
+      "commit": "5536ba6c4eee1ef95c849ede2914e1ced26d0861",
+      "tests": [
+        "TestSuiteKagentRealNativeA2ACarrier"
+      ],
+      "environment": [
+        "EXECUTION_KAGENT_NATIVE_ROOT",
+        "EXECUTION_KAGENT_NATIVE_SCENARIO",
+        "KMX_KAGENT_NATIVE_SOCKET"
+      ],
+      "source": "https://github.com/vfalico/kaimahi-public/blob/5536ba6c4eee1ef95c849ede2914e1ced26d0861/internal/kmx/app/suite_kagent_native_a2a_test.go"
+    },
+    {
+      "repository": "kaimahi",
+      "file": "internal/kmx/app/suite_public_native_integration_test.go",
+      "commit": "5536ba6c4eee1ef95c849ede2914e1ced26d0861",
+      "tests": [
+        "TestSuiteToolchatPublicNativeIntegration"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_NETWORK_INDEPENDENT",
+        "EXECUTION_PUBLIC_NATIVE_ROOT",
+        "EXECUTION_PUBLIC_NATIVE_SCENARIO"
+      ],
+      "source": "https://github.com/vfalico/kaimahi-public/blob/5536ba6c4eee1ef95c849ede2914e1ced26d0861/internal/kmx/app/suite_public_native_integration_test.go"
+    },
+    {
+      "repository": "kagent",
+      "file": "go/core/internal/a2agateway/native_public_test.go",
+      "commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "tests": [
+        "TestPublicKaimahiNativeA2A"
+      ],
+      "environment": [
+        "EXECUTION_KAGENT_NATIVE_ROOT",
+        "EXECUTION_KAGENT_NATIVE_SCENARIO",
+        "EXECUTION_KAIMAHI_KAGENT_TEST",
+        "EXECUTION_NATIVE_KAGENT_A2A",
+        "SESSIONS_NATIVE_ROUTER"
+      ],
+      "source": "https://github.com/vfalico/kagent-public/blob/454bd1f200a4976de279fedb8ac8f6716fca40fe/go/core/internal/a2agateway/native_public_test.go"
+    },
+    {
+      "repository": "kagent",
+      "file": "go/core/internal/controller/native_authoring_admission_test.go",
+      "commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "tests": [
+        "TestCurrentKaimahiCodexRealAdmission"
+      ],
+      "environment": [
+        "EXECUTION_CURRENT_GOLDEN",
+        "EXECUTION_CURRENT_MODEL_DENY",
+        "EXECUTION_CURRENT_OVERLAP",
+        "EXECUTION_CURRENT_PUBLIC",
+        "EXECUTION_CURRENT_RECOVERY",
+        "EXECUTION_CURRENT_RESTORE_NEGATIVE",
+        "EXECUTION_CURRENT_SESSION",
+        "EXECUTION_CURRENT_WARM_REFUSAL",
+        "KMX_CODEX_ADMISSION_CAPTURE",
+        "KMX_CODEX_RENDER_CAPTURE",
+        "KMX_TEMPLATE_CONTROL_ROOT",
+        "SUBSTRATE_EXECUTION_ENFORCER_CONFIG"
+      ],
+      "source": "https://github.com/vfalico/kagent-public/blob/454bd1f200a4976de279fedb8ac8f6716fca40fe/go/core/internal/controller/native_authoring_admission_test.go"
+    },
+    {
+      "repository": "kagent",
+      "file": "go/core/internal/grpcserver/native_execution_test.go",
+      "commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "tests": [
+        "TestPublicSessionNativeCompute"
+      ],
+      "environment": [
+        "EXECUTION_KAGENT_NATIVE_ROOT",
+        "EXECUTION_SESSIONS_CLIENT"
+      ],
+      "source": "https://github.com/vfalico/kagent-public/blob/454bd1f200a4976de279fedb8ac8f6716fca40fe/go/core/internal/grpcserver/native_execution_test.go"
+    },
+    {
+      "repository": "kagent",
+      "file": "go/core/pkg/app/native_app_test.go",
+      "commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "tests": [
+        "TestCurrentKaimahiCodexRealAdmission"
+      ],
+      "environment": [
+        "EXECUTION_TASK_ROOT",
+        "KMX_CODEX_RENDER_CAPTURE",
+        "KMX_CURRENT_PUBLIC_CLI",
+        "KMX_TEMPLATE_CONTROL_ROOT"
+      ],
+      "source": "https://github.com/vfalico/kagent-public/blob/454bd1f200a4976de279fedb8ac8f6716fca40fe/go/core/pkg/app/native_app_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/ateapi/internal/controlapi/native_rpc_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeControlRPC"
+      ],
+      "environment": [
+        "EXECUTION_CONTROL_NATIVE_ROOT",
+        "EXECUTION_CURRENT_GOLDEN",
+        "EXECUTION_NATIVE_KAGENT",
+        "EXECUTION_NATIVE_KAGENT_A2A",
+        "EXECUTION_NATIVE_KAIMAHI",
+        "EXECUTION_NATIVE_WORKER_IP"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/ateapi/internal/controlapi/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/atelet/native_rpc_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeAteletRPC"
+      ],
+      "environment": [
+        "EXECUTION_ATELET_NATIVE_ROOT",
+        "EXECUTION_CURRENT_GOLDEN",
+        "EXECUTION_CURRENT_PUBLIC",
+        "EXECUTION_KAGENT_CODEX",
+        "EXECUTION_NATIVE_KAGENT_A2A"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/atelet/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/atenet/internal/router/native_rpc_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeRouterRPC",
+        "TestNativeTunnelRelay"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_KAGENT",
+        "EXECUTION_NATIVE_RELAY",
+        "EXECUTION_ROUTER_NATIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/atenet/internal/router/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/ateom-microvm/independent_gate_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestIndependentOpaquePeerNativeComputeGate",
+        "TestIndependentOpaqueGuestCleanupFreshProcess"
+      ],
+      "environment": [
+        "EXECUTION_FRESH_CLEANUP_DIRS",
+        "EXECUTION_FRESH_CLEANUP_ID",
+        "EXECUTION_PEER_GATE_ROOT",
+        "EXECUTION_PEER_GUEST_IMAGE",
+        "EXECUTION_PEER_GUEST_KERNEL",
+        "EXECUTION_PEER_STATE_ROOT",
+        "SUBSTRATE_EXECUTION_ENFORCER_CONFIG"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/ateom-microvm/independent_gate_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/ateom-microvm/native_boundary_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeMicroVMExecutionBoundary"
+      ],
+      "environment": [
+        "EXECUTION_MICROVM_DNS_LOG",
+        "EXECUTION_MICROVM_DNS_UPSTREAM",
+        "EXECUTION_MICROVM_EMPTY_REQUIREMENT",
+        "EXECUTION_MICROVM_REQUIREMENT",
+        "EXECUTION_MICROVM_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/ateom-microvm/native_boundary_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "cmd/ateom-microvm/native_sessions_tools_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeMicroVMSessionsTools"
+      ],
+      "environment": [
+        "EXECUTION_CURRENT_GOLDEN",
+        "EXECUTION_CURRENT_MODEL_DENY",
+        "EXECUTION_CURRENT_OVERLAP",
+        "EXECUTION_CURRENT_PUBLIC",
+        "EXECUTION_CURRENT_RECONCILER_BINARY",
+        "EXECUTION_CURRENT_RECOVERY",
+        "EXECUTION_CURRENT_RENDER",
+        "EXECUTION_CURRENT_TOOL_DENY",
+        "EXECUTION_CURRENT_VMM",
+        "EXECUTION_KAGENT_ENV",
+        "EXECUTION_KAGENT_NATIVE_CLIENT",
+        "EXECUTION_KAGENT_NATIVE_SCENARIO",
+        "EXECUTION_MICROVM_DNS_UPSTREAM",
+        "EXECUTION_MICROVM_REQUIREMENT",
+        "EXECUTION_MICROVM_ROOT",
+        "EXECUTION_NATIVE_ATELET",
+        "EXECUTION_NATIVE_ATELET_BINARY",
+        "EXECUTION_NATIVE_CONTROL",
+        "EXECUTION_NATIVE_CONTROL_BINARY",
+        "EXECUTION_NATIVE_KAGENT",
+        "EXECUTION_NATIVE_KAGENT_A2A",
+        "EXECUTION_NATIVE_KAGENT_BINARY",
+        "EXECUTION_NATIVE_KAIMAHI",
+        "EXECUTION_NATIVE_KAIMAHI_BINARY",
+        "EXECUTION_NATIVE_ROUTER",
+        "EXECUTION_NATIVE_ROUTER_BINARY",
+        "EXECUTION_PUBLIC_NATIVE_SCENARIO",
+        "EXECUTION_SESSIONS_CLIENT",
+        "EXECUTION_TASK_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/cmd/ateom-microvm/native_sessions_tools_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "internal/executionpolicy/independent_peer_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestIndependentOpaquePeerFromNormalConfig"
+      ],
+      "environment": [
+        "EXECUTION_TEST_PEER_CONFIG"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/internal/executionpolicy/independent_peer_linux_test.go"
+    },
+    {
+      "repository": "substrate-kagent",
+      "file": "internal/executionpolicy/native_linux_test.go",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tests": [
+        "TestNativeConfiguredInterfaceBinding"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_ACTOR_NS",
+        "EXECUTION_NATIVE_CGROUP",
+        "EXECUTION_NATIVE_CONFIG",
+        "EXECUTION_NATIVE_INTERFACE",
+        "EXECUTION_NATIVE_NETNS",
+        "EXECUTION_NATIVE_REQUIREMENT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/07b44679f2ca8d100562eaa544c802d0e850d5cd/internal/executionpolicy/native_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/ateapi/internal/controlapi/native_rpc_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeControlRPC"
+      ],
+      "environment": [
+        "EXECUTION_CONTROL_NATIVE_ROOT",
+        "EXECUTION_CONTROL_PUBLIC_TLS",
+        "EXECUTION_NATIVE_KAIMAHI",
+        "EXECUTION_NATIVE_WORKER_IP",
+        "EXECUTION_PUBLIC_NATIVE_SCENARIO"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/ateapi/internal/controlapi/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/atelet/native_rpc_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeAteletRPC"
+      ],
+      "environment": [
+        "EXECUTION_ATELET_NATIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/atelet/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/atenet/internal/router/native_rpc_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeRouterRPC",
+        "TestNativeTunnelRelay"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_RELAY",
+        "EXECUTION_ROUTER_NATIVE_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/atenet/internal/router/native_rpc_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/ateom-microvm/independent_gate_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestIndependentOpaquePeerNativeComputeGate",
+        "TestIndependentOpaqueGuestCleanupFreshProcess"
+      ],
+      "environment": [
+        "EXECUTION_FRESH_CLEANUP_DIRS",
+        "EXECUTION_FRESH_CLEANUP_ID",
+        "EXECUTION_PEER_GATE_ROOT",
+        "EXECUTION_PEER_GUEST_IMAGE",
+        "EXECUTION_PEER_GUEST_KERNEL",
+        "EXECUTION_PEER_STATE_ROOT",
+        "SUBSTRATE_EXECUTION_ENFORCER_CONFIG"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/ateom-microvm/independent_gate_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/ateom-microvm/native_boundary_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeMicroVMExecutionBoundary"
+      ],
+      "environment": [
+        "EXECUTION_MICROVM_DNS_LOG",
+        "EXECUTION_MICROVM_DNS_UPSTREAM",
+        "EXECUTION_MICROVM_EMPTY_REQUIREMENT",
+        "EXECUTION_MICROVM_REQUIREMENT",
+        "EXECUTION_MICROVM_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/ateom-microvm/native_boundary_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "cmd/ateom-microvm/native_sessions_tools_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeMicroVMSessionsTools"
+      ],
+      "environment": [
+        "EXECUTION_GUEST_ENFORCER_FAULT",
+        "EXECUTION_MICROVM_DNS_UPSTREAM",
+        "EXECUTION_MICROVM_REQUIREMENT",
+        "EXECUTION_MICROVM_ROOT",
+        "EXECUTION_NATIVE_ATELET",
+        "EXECUTION_NATIVE_ATELET_BINARY",
+        "EXECUTION_NATIVE_CONTROL",
+        "EXECUTION_NATIVE_CONTROL_BINARY",
+        "EXECUTION_NATIVE_KAIMAHI",
+        "EXECUTION_NATIVE_KAIMAHI_BINARY",
+        "EXECUTION_NATIVE_NETWORK_INDEPENDENT",
+        "EXECUTION_NATIVE_ROUTER",
+        "EXECUTION_NATIVE_ROUTER_BINARY",
+        "EXECUTION_PUBLIC_NATIVE_SCENARIO",
+        "EXECUTION_SESSIONS_CLIENT",
+        "EXECUTION_TASK_ROOT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/cmd/ateom-microvm/native_sessions_tools_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "internal/executionpolicy/independent_peer_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestIndependentOpaquePeerFromNormalConfig"
+      ],
+      "environment": [
+        "EXECUTION_TEST_PEER_CONFIG"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/internal/executionpolicy/independent_peer_linux_test.go"
+    },
+    {
+      "repository": "substrate-sessions",
+      "file": "internal/executionpolicy/native_linux_test.go",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tests": [
+        "TestNativeConfiguredInterfaceBinding"
+      ],
+      "environment": [
+        "EXECUTION_NATIVE_ACTOR_NS",
+        "EXECUTION_NATIVE_CGROUP",
+        "EXECUTION_NATIVE_CONFIG",
+        "EXECUTION_NATIVE_INTERFACE",
+        "EXECUTION_NATIVE_NETNS",
+        "EXECUTION_NATIVE_REQUIREMENT"
+      ],
+      "source": "https://github.com/vfalico/substrate-public/blob/95468294b23930e09332dc358c21b8dd47d2b87f/internal/executionpolicy/native_linux_test.go"
+    }
+  ],
+  "scope": "Literal native opt-in environment lookups; inspect source for indirect and dynamically constructed inputs"
+}

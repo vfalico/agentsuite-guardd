@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "repository": "orka",
+      "url": "https://github.com/vfalico/orka-public.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "f68c995d0d3bb4e9bfa5f4c981a7af78f7d91b8e",
+      "tree": "277d27cd2cf51fe890c4c682b11bf2d5ee7928ef",
+      "base": "11331ec60d58dc042e963d4ce2ec72b142f80a35",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "sessions",
+      "url": "https://github.com/vfalico/sessions-public.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "de5128958a6c40acf5620a696e9d0b21e1d27003",
+      "tree": "23c67e9688b7c8f1aadc0f6bae663a3c62e9ac1d",
+      "base": "73292def8ea95f0eb6a04ac6024be9d6e7d21c30",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "kaimahi",
+      "url": "https://github.com/vfalico/kaimahi-public.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "5536ba6c4eee1ef95c849ede2914e1ced26d0861",
+      "tree": "77817197144f19c824ed4acce684b9f680409a92",
+      "base": "1617117e6b73fc00403ba59e6edecbe05fa58dc1",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "guardd",
+      "url": "https://github.com/vfalico/agentsuite-guardd.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "a7d3fdc8f929930bb1d4dcf42f46e4b8feb43046",
+      "tree": "4589d58343ac8dea194dbb1b83b7fa5051f129ba",
+      "base": "499462908370d8f62543b8e93fa35f6fb93cb4ae",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "kagent",
+      "url": "https://github.com/vfalico/kagent-public.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "454bd1f200a4976de279fedb8ac8f6716fca40fe",
+      "tree": "b9d35ccd4c3a7c8eaae47c187b572f9802ce6e3e",
+      "base": "a0ad6cb98b02bf4a3537a2b6fdc04e71f315bdf3",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "substrate-kagent",
+      "url": "https://github.com/vfalico/substrate-public.git",
+      "ref": "poc/whole-requirement-v1-kagent",
+      "commit": "07b44679f2ca8d100562eaa544c802d0e850d5cd",
+      "tree": "531b8b7ac036a68aec3045c165e9ee782d4394c6",
+      "base": "9c4b1fb52212028100fa02c8a7bc4526575ea37e",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "substrate-sessions",
+      "url": "https://github.com/vfalico/substrate-public.git",
+      "ref": "poc/whole-requirement-v1-sessions",
+      "commit": "95468294b23930e09332dc358c21b8dd47d2b87f",
+      "tree": "9149357e093994860b7da1de231bdd72bae6b9fe",
+      "base": "96dffb287919da3b198402c07e1fc68b7b61c90d",
+      "module_paths": "canonical; unchanged"
+    },
+    {
+      "repository": "suite",
+      "url": "https://github.com/vfalico/suite-public.git",
+      "ref": "poc/whole-requirement-v1",
+      "commit": "c0347a4d33de8a75cd6270afe6ea9409e4c12c06",
+      "tree": "70d05d7359c0a60085c6da86ad4c6c07a4f6865b",
+      "base": "c0347a4d33de8a75cd6270afe6ea9409e4c12c06",
+      "module_paths": "canonical; unchanged"
+    }
+  ]
+}

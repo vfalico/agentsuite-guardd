@@ -1,0 +1,81 @@
+diff --git a/cmd/ateom-microvm/native_sessions_tools_linux_test.go b/cmd/ateom-microvm/native_sessions_tools_linux_test.go
+index 603df16a..822a14a1 100644
+--- a/cmd/ateom-microvm/native_sessions_tools_linux_test.go
++++ b/cmd/ateom-microvm/native_sessions_tools_linux_test.go
+@@ -28,6 +28,7 @@ import (
+ 	"io"
+ 	"math/big"
+ 	"net"
++	"net/http"
+ 	"net/url"
+ 	"os"
+ 	"os/exec"
+@@ -469,6 +470,54 @@ threading.Event().wait()`
+ 				receiverDone <- err
+ 				return
+ 			}
++			if os.Getenv("EXECUTION_NATIVE_NETWORK_INDEPENDENT") == "1" {
++				// The receiver and live RAW controls are already ready above.
++				// Wait for this Actor's normal control-stdio, not packet egress.
++				ackCtx, ackCancel := context.WithTimeout(receiverCtx, 45*time.Second)
++				defer ackCancel()
++				var last error
++				for {
++					transport := &http.Transport{DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
++						s.actorsMu.RLock()
++						var uid string
++						for id, h := range s.actors {
++							if strings.HasPrefix(h.attribution.Ref.Name, "session-") {
++								uid = id
++								break
++							}
++						}
++						s.actorsMu.RUnlock()
++						if uid == "" {
++							return nil, fmt.Errorf("owning Actor not prepared")
++						}
++						return s.dialControlStdio(ctx, uid, network, address)
++					}}
++					request, e := http.NewRequestWithContext(ackCtx, "POST", "http://169.254.17.2:80/fixture-receiver-ready", nil)
++					if e != nil {
++						receiverDone <- e
++						return
++					}
++					response, e := (&http.Client{Transport: transport, Timeout: 5 * time.Second}).Do(request)
++					if e == nil {
++						io.Copy(io.Discard, response.Body)
++						response.Body.Close()
++						if response.StatusCode == http.StatusNoContent {
++							transport.CloseIdleConnections()
++							t.Log("NETWORK_INDEPENDENT_REAL_RECEIVER_READY_ACK")
++							break
++						}
++						e = fmt.Errorf("receiver ack HTTP %d", response.StatusCode)
++					}
++					transport.CloseIdleConnections()
++					last = e
++					select {
++					case <-ackCtx.Done():
++						receiverDone <- fmt.Errorf("real receiver ack failed: %v %w", last, ackCtx.Err())
++						return
++					case <-time.After(50 * time.Millisecond):
++					}
++				}
++			}
+ 			close(ready)
+ 			<-receiverCtx.Done() // exact tracked process; no process-name signalling
+ 			// SIGTERM is handled to emit truthful receiver counts before exit.
+@@ -541,6 +590,13 @@ threading.Event().wait()`
+ 				expectedModel = 0
+ 				expectedAllowed = 0
+ 			}
++			if os.Getenv("EXECUTION_NATIVE_NETWORK_INDEPENDENT") == "1" {
++				expectedModel = 0
++				expectedAllowed = 1
++				if os.Getenv("EXECUTION_PUBLIC_NATIVE_SCENARIO") == "empty" {
++					expectedAllowed = 0
++				}
++			}
+ 			if counts["model"] != expectedModel || counts["allow"] != expectedAllowed || counts["deny"] != 0 {
+ 				receiverDone <- fmt.Errorf("wrong real receiver counts %v", counts)
+ 				return

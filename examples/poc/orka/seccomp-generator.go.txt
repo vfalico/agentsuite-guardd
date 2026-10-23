@@ -1,0 +1,3 @@
+package main
+import("encoding/json";"os";"github.com/containerd/containerd/contrib/seccomp";s "github.com/opencontainers/runtime-spec/specs-go")
+func main(){p:=seccomp.DefaultProfile(&s.Spec{Process:&s.Process{Capabilities:&s.LinuxCapabilities{Bounding:[]string{"CAP_CHOWN","CAP_KILL","CAP_SETGID","CAP_SETUID","CAP_SYS_PTRACE"}}}});for i:=range p.Syscalls {names:=p.Syscalls[i].Names[:0];for _,n:=range p.Syscalls[i].Names{if n!="clone3"{names=append(names,n)}};p.Syscalls[i].Names=names};var out []s.LinuxSyscall;for _,v:=range p.Syscalls{if len(v.Names)>0{out=append(out,v)}};p.Syscalls=append(out,s.LinuxSyscall{Names:[]string{"clone3"},Action:s.ActAllow});e:=json.NewEncoder(os.Stdout);e.SetIndent("","  ");if err:=e.Encode(p);err!=nil{panic(err)}}

@@ -16,3 +16,9 @@ must preserve those files.
 The Go runtime adapter uses the Go standard library only. The external Gadget is
 built against public Linux eBPF and Inspektor Gadget OCI Gadget interfaces;
 those dependencies are not vendored in this source archive.
+
+The public PoC's `examples/poc/orka/held-seccomp.json` is derived from
+containerd's default seccomp profile, distributed under Apache License 2.0.
+The accompanying generator source preserves that attribution and shows the
+explicit clone3 adjustment. See <https://github.com/containerd/containerd>
+and this distribution's Apache-2.0 `LICENSE`.

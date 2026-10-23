@@ -1,0 +1,1 @@
+{"apiVersion": "v1", "kind": "List", "items": [{"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": "poc-orka-normal", "labels": {"orka.ai/controller-mode": "harness-v2"}}}, {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": "poc-orka-runtime", "labels": {"pod-security.kubernetes.io/enforce": "privileged"}}}]}
